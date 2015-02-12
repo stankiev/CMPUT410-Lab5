@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
+    {% if session.logged_in %}
     <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
       <dl>
         <dt>Category:
@@ -11,6 +12,7 @@
         <dd><input type=submit value=Add>
       </dl>
     </form>
+   {% endif %}
    {% if entries|length > 0 %}
    <table style="width:100%">
   	<tr>
@@ -23,12 +25,14 @@
 		<tr>
     		<td>{{ entry.category }}</td> 
 		<td>{{ entry.priority }}</td>
-		<td>{{ entry.description }}</td>
-		<td>
+		<td>{{ entry.description }}</td>	
+        <td>
+            {% if session.logged_in %}
 			<form action="{{ url_for('delete_entry') }}" method=post>
 				<input type=submit value=Completed>
 				<input type=hidden name=id value={{ entry.id }}>
 			</form>
+            {% endif %}
 		</td>
     		</tr> 
   		{% endfor %}

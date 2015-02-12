@@ -1,12 +1,12 @@
-<!doctype html>
-<title>TODO List</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-<div class=page>
-  <h1>TODO List</h1>
-  <div class=metanav>
-  </div>
-  {% for message in get_flashed_messages() %}
-    <div class=flash>{{ message }}</div>
-  {% endfor %}
-  {% block body %}{% endblock %}
-</div>
+{% extends "layout.html" %}
+{% block body %}
+    <form action="{{ url_for('login') }}" method=post class=login>
+      <dl>
+        <dt>Username:
+        <dd><input type=text size=30 name=username>
+        <dt>Password:
+        <dd><input type=password name=password>
+        <dd><input type=submit value=Login>
+      </dl>
+    </form>
+{% endblock %}

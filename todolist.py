@@ -3,16 +3,6 @@
 #
 # Edited by: Dylan Stankievech and Robert Hackman
 #
-# Pair programmed because Robert lost his account even though he
-# totally logged out and it was AICT's fault because they didn't
-# know how to fix his monitor display issue and gave him bad
-# advice that resulted in this whole debacle not his so he's
-# really upset about it and he's going to give them a piece of
-# his mind when he goes to get it unbanned because really he is
-# supposed to be able to complete any course without his own
-# computer and they have violated that and now he's so upset
-# that he's probably the one writing this horrible run on
-# sentence.
 #
 #
 
@@ -35,7 +25,6 @@ app.config.update(dict(
     PASSWORD='default'
 ))
 app.config.from_envvar('TODO_SETTINGS', silent=True)
-
 
 def connect_db():
     """Connects to the specific database."""
@@ -65,6 +54,12 @@ def get_db():
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
+def query_db(query, args=(), one=False):
+    cur = get_db().cursor()
+    cur.execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
 
 @app.teardown_appcontext
 def close_db(error):
@@ -72,12 +67,39 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
-@app.route('/')
-def show_entries():
-    db = get_db()
-    cur = db.execute('select category, priority, description, id from entries order by priority desc')
-    entries = cur.fetchall()
-    return render_template('show_entries.html', entries=entries)
+@app.route('/', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']	
+        if username == 'admin' and password=='password':
+            session['logged_in'] = True
+            flash('Successfully logged in')
+            return redirect(url_for('home'))
+        else:
+            flash('Incorrect login')
+            session['logged_in'] = False
+            return redirect(url_for('login'))
+    elif request.method == 'GET':
+        return render_template('login.html')
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['logged_in'] = False
+    flash('Logged out')
+    return redirect(url_for('home'))
+
+@app.route('/home', methods=['POST', 'GET'])
+def home():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']	
+        db = get_db()
+        cur = db.execute('select category, priority, description, id from entries order by priority desc')
+        entries = cur.fetchall()
+        return render_template('show_entries.html', entries=entries)
+    elif request.method == 'GET':
+        return render_template('show_entries.html', entries=query_db('select * from entries'))
 
 @app.route('/add', methods=['POST'])
 def add_entry():
@@ -86,7 +108,7 @@ def add_entry():
                  [request.form['category'], request.form['priority'], request.form['description']])
     db.commit()
     flash('New entry was successfully posted')
-    return redirect(url_for('show_entries'))
+    return redirect(url_for('home'))
 
 @app.route('/delete', methods=['POST'])
 def delete_entry():
@@ -95,4 +117,4 @@ def delete_entry():
     db.execute('delete from entries where id = ?', [delete_id])
     db.commit()
     flash('Entry was successfully deleted')
-    return redirect(url_for('show_entries'))
+    return redirect(url_for('home'))
