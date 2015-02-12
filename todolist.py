@@ -1,5 +1,6 @@
 # Most of this code was copied from: http://flask.readthedocs.org/en/latest/tutorial/introduction/\
-# code edited for CMPUT410-Lab4
+# Copied from https://github.com/stankiev/CMPUT410-Lab4
+# code edited for CMPUT410-Lab5
 #
 # Edited by: Dylan Stankievech and Robert Hackman
 #
@@ -91,15 +92,10 @@ def logout():
 
 @app.route('/home', methods=['POST', 'GET'])
 def home():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']	
         db = get_db()
         cur = db.execute('select category, priority, description, id from entries order by priority desc')
         entries = cur.fetchall()
         return render_template('show_entries.html', entries=entries)
-    elif request.method == 'GET':
-        return render_template('show_entries.html', entries=query_db('select * from entries'))
 
 @app.route('/add', methods=['POST'])
 def add_entry():
